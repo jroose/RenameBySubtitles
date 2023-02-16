@@ -79,11 +79,11 @@ def extract_subtitles(path: pathlib.Path, model='base'):
             ffmpeg = sh.command('ffmpeg')
             whisper = sh.command('whisper')
             try:
-                sh(ffmpeg('-i', path, '-ac', '1', '-ar', '1600', wavpath.name), stdout=None)
+                sh(ffmpeg('-i', path, '-ac', '1', wavpath.name))
             except shtk.NonzeroExitCodeException:
                 return None
 
-            sh(whisper('--model', model, '--language', 'en', wavepath.name), stdout=None)
+            sh(whisper('--model', model, '--language', 'en', wavpath.name))
 
         for ext in ['txt', 'vtt', 'tsv', 'json']:
             rmpath = dirpath / f"{path.stem}.{ext}"
@@ -134,12 +134,14 @@ def main(*argv):
     for target in args.target:
         if target.is_dir():
             for target_file in target.glob(f"**/*.srt"):
+                log.debug(f"Loading target subtitles from {target_file!s}")
                 if target_file.is_file():
                     try:
                         all_target_hashes[target_file] = process_subs(load_srt(target_file))
                     except ValueError:
                         log.exception(f"Failed to process subtitles: {target_file}")
         elif target.is_file():
+            log.debug(f"Loading target subtitles from {target_file!s}")
             try:
                 all_target_hashes[target] = process_subs(load_srt(target))
             except ValueError:
